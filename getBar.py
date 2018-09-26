@@ -82,6 +82,8 @@ def dealBar(strBar, ee):
             # 对bar数据进行处理
             getOrder(eachFreq, goodsCode,goodsInstrument, tradeTime, ee, orderRef)
 
+
+
 # 获取单个均值并插入
 def getOneMa(freq, goodsCode, CurrentTradeTime):
     goodsName = dictGoodsName[goodsCode]
