@@ -5,6 +5,7 @@ from WindPy import w
 
 # 品种对应调整表
 dictGoodsAdj = {}
+
 def checkChg():
     s = lambda x: x in '0123456789'
     for file in os.listdir(r'.\position_max'):
