@@ -232,7 +232,7 @@ port = 8080
 # 是否引入重叠度长度对应的均值标识
 MaWithODLenFlag = False
 # 资金账号名称
-accountName = "测二"
+accountName = "起航"
 # 在开仓bar内进行止盈与止损操作
 StopAbtainInBarMux = 2
 StopLossInBarMux = 2
@@ -246,3 +246,21 @@ StopLossInBarMux = 2
 PricUnreachableHighPrice = 999999  # 下单时，保证价格无效的最大价格
 PricUnreachableLowPrice = -1  # 下单时，保证价格无效的最大价格
 PricUnreachableOpenPrice = 666666  # 下单时，开仓线无效的标识
+# 期货没有夜盘日期
+futureDate = [date(2018, 9, 28)]
+# 主力合约的数据
+dictGoodsZhuli = {}
+def getMainInstrument():
+    yconnect_msg = 'mysql+pymysql://root:rd008@localhost:3306/cta1_trade?charset=utf8'
+    yconnect = create_engine(yconnect_msg)
+    con = yconnect.connect()
+    for goodsCode in dictGoodsName.keys():
+        goodsName = dictGoodsName[goodsCode]
+        dfData = pd.read_sql('select goods_code from ' + goodsName + '_调整时刻表', con)
+        heyue = dfData['goods_code'].iat[-1]
+        if heyue.split('.')[1] in ["SHF", 'DCE']:
+            heyue = heyue.split('.')[0].lower() + '.' + heyue.split('.')[1]
+        else:
+            heyue = heyue.split('.')[0].upper() + '.' + heyue.split('.')[1]
+        dictGoodsZhuli[goodsCode] = heyue
+getMainInstrument()

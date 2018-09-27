@@ -15,6 +15,7 @@ from completeDb import *
 from tdApi import *
 import socket
 import time as ttt
+from mdApi import MdApi
 
 class RdMdUi(QMainWindow):
     def __init__(self):
@@ -269,8 +270,19 @@ class RdMdUi(QMainWindow):
         thd.start()
 
     def getTd(self):
-        # 生成tradeApi
+        self.md = MdApi(self.ee)
+        ttt.sleep(1)
+        if not self.md.islogin:
+            putLogEvent(self.ee, "行情服务器登陆失败")
+        else:
+            putLogEvent(self.ee, "订阅主力合约")
+            for each in dictGoodsZhuli.values():
+                self.md.q.SubscribeMarketData(each.split('.')[0])
+
         self.td = TdApi(self.ee)
+        ttt.sleep(1)
+        if not self.td.islogin:
+            putLogEvent(self.ee, "交易服务器登陆失败")
         try:
             obj = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             obj.connect((host, port))
@@ -347,6 +359,7 @@ class RdMdUi(QMainWindow):
         self.ee.register(EVENT_ORDERPARKCOMMAND, self.orderParkCommand)
         self.ee.register(EVENT_ORDERCANCEL, self.orderCancel)
         self.ee.register(EVENT_ORDERPARKCANCEL, self.orderParkCancel)
+        self.ee.register(EVENT_MARKETDATA_CONTRACT, self.dealTickData)
         self.ee.start(timer=False)
         putLogEvent(self.ee, '程序启动~~~~~~~~~~~~~~~~')
         putLogTickEvent(self.ee, '程序启动~~~~~~~~~~~~~~~~')
@@ -419,10 +432,8 @@ class RdMdUi(QMainWindow):
         tmp["时间"] = pd.Timestamp(var["TradeDate"] + ' ' + var["TradeTime"])
         tmp["代码"] = var["InstrumentID"]
         if tmp["代码"][-4:].isdigit():
-            tmp["代码"] = tmp["代码"] + '.' + dictGoodsChg[tmp["代码"][:-4]]
             tmp["名称"] = dictGoodsName[var["InstrumentID"][:-4] + '.' + dictGoodsChg[var["InstrumentID"][:-4]]]
         else:
-            tmp["代码"] = tmp["代码"] + '.' + dictGoodsChg[tmp["代码"][:-3]]
             tmp["名称"] = dictGoodsName[var["InstrumentID"][:-3] + '.' + dictGoodsChg[var["InstrumentID"][:-3]]]
         if var["Direction"] == 'Buy':
             tmp["方向"] = "买/多"
@@ -460,6 +471,7 @@ class RdMdUi(QMainWindow):
                                           QTableWidgetItem(str(tmp[listFreqPosition[num]])))
                 tablePosition.resizeColumnsToContents()
 
+    # 总持仓
     def position(self, event):
         var = event.dict_['data']
         tmp = {}
@@ -491,6 +503,7 @@ class RdMdUi(QMainWindow):
                                         QTableWidgetItem(str(tmp[self.tablePositionColumns[num]])))
         self.tablePosition.resizeColumnsToContents()
 
+    # 查账号
     def account(self, event):
         var = event.dict_['data']
         tmp = {}
@@ -577,6 +590,9 @@ class RdMdUi(QMainWindow):
                 if dictFreqOrderSource[freq]['StatusMsg'][index] not in ["全部成交报单已提交", "已撤单"]:
                     dict = dictFreqOrderSource[freq].loc[index].to_dict()
                     self.td.cancelOrderPark(dict)
+
+    def dealTickData(self, event):
+        pass
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

@@ -2,6 +2,7 @@
 <project version="4">
   <component name="BookmarkManager">
     <bookmark url="file://$PROJECT_DIR$/main.py" line="290" mnemonic="1" />
+<<<<<<< HEAD
     <bookmark url="file://$PROJECT_DIR$/getBar.py" line="265" mnemonic="2" />
     <bookmark url="file://$PROJECT_DIR$/getBar.py" line="350" mnemonic="3" />
     <bookmark url="file://$PROJECT_DIR$/getBar.py" line="216" mnemonic="0" />
@@ -9,6 +10,13 @@
   <component name="ChangeListManager">
     <list default="true" id="224bb708-6341-447c-aeb2-1a8853309b80" name="默认的" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/chgAdjust.py" afterPath="$PROJECT_DIR$/chgAdjust.py" />
+=======
+    <bookmark url="file://$PROJECT_DIR$/getBar.py" line="263" mnemonic="2" />
+    <bookmark url="file://$PROJECT_DIR$/getBar.py" line="348" mnemonic="3" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="224bb708-6341-447c-aeb2-1a8853309b80" name="默认的" comment="">
+>>>>>>> 2a02a179d800e1be8e85b2138af83350c75baf76
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/getBar.py" afterPath="$PROJECT_DIR$/getBar.py" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -53,8 +61,13 @@
       <file leaf-file-name="getBar.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/getBar.py">
           <provider selected="true" editor-type-id="text-editor">
+<<<<<<< HEAD
             <state relative-caret-position="339">
               <caret line="273" column="9" lean-forward="true" selection-start-line="273" selection-start-column="9" selection-end-line="273" selection-end-column="9" />
+=======
+            <state relative-caret-position="418">
+              <caret line="85" column="0" lean-forward="true" selection-start-line="85" selection-start-column="0" selection-end-line="85" selection-end-column="0" />
+>>>>>>> 2a02a179d800e1be8e85b2138af83350c75baf76
               <folding>
                 <element signature="e#0#23#0" expanded="true" />
                 <element signature="e#12111#12122#0" expanded="false" />
@@ -451,17 +464,28 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
+<<<<<<< HEAD
     <frame x="928" y="3" width="970" height="1031" extended-state="0" />
     <editor active="true" />
     <layout>
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.17692308" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+=======
+    <frame x="809" y="22" width="1100" height="1005" extended-state="0" />
+    <editor active="true" />
+    <layout>
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.15480769" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+>>>>>>> 2a02a179d800e1be8e85b2138af83350c75baf76
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32918552" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="调试" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32983682" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.19316843" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
+<<<<<<< HEAD
       <window_info id="运行" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.31922197" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
+=======
+      <window_info id="运行" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.2948113" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
+>>>>>>> 2a02a179d800e1be8e85b2138af83350c75baf76
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32908458" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
       <window_info id="Data View" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
@@ -484,18 +508,34 @@
     <breakpoint-manager>
       <breakpoints>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+<<<<<<< HEAD
+=======
+          <url>file://$PROJECT_DIR$/getBar.py</url>
+          <line>349</line>
+          <option name="timeStamp" value="3" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+>>>>>>> 2a02a179d800e1be8e85b2138af83350c75baf76
           <url>file://$PROJECT_DIR$/orderUi.py</url>
           <line>99</line>
           <option name="timeStamp" value="6" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/getBar.py</url>
+<<<<<<< HEAD
           <line>319</line>
+=======
+          <line>317</line>
+>>>>>>> 2a02a179d800e1be8e85b2138af83350c75baf76
           <option name="timeStamp" value="7" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/getBar.py</url>
+<<<<<<< HEAD
           <line>399</line>
+=======
+          <line>397</line>
+>>>>>>> 2a02a179d800e1be8e85b2138af83350c75baf76
           <option name="timeStamp" value="8" />
         </line-breakpoint>
       </breakpoints>
@@ -838,8 +878,13 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/getBar.py">
       <provider selected="true" editor-type-id="text-editor">
+<<<<<<< HEAD
         <state relative-caret-position="339">
           <caret line="273" column="9" lean-forward="true" selection-start-line="273" selection-start-column="9" selection-end-line="273" selection-end-column="9" />
+=======
+        <state relative-caret-position="418">
+          <caret line="85" column="0" lean-forward="true" selection-start-line="85" selection-start-column="0" selection-end-line="85" selection-end-column="0" />
+>>>>>>> 2a02a179d800e1be8e85b2138af83350c75baf76
           <folding>
             <element signature="e#0#23#0" expanded="true" />
             <element signature="e#12111#12122#0" expanded="false" />
