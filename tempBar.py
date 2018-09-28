@@ -6,8 +6,6 @@ from getWeekTradeTab import getOneWeekTradeTab
 def dealBar(strBar, ee):
     dict = eval(strBar.replace("datetime.", ""))
     putLogEvent(ee, strBar)
-    dictCon[1].execute(dictTable[dict['goods_name']].insert(), dict)
-    dictCon[1].execute(dictTable[dict['goods_name'] + '_调整表'].insert(), dict)
     tradeTime = dict['trade_time']
     if dict['goods_code'].split('.')[0][-4:].isdigit():
         goodsCode = dict['goods_code'].split('.')[0][:-4] + '.' + dict['goods_code'].split('.')[1]
@@ -28,16 +26,18 @@ def dealBar(strBar, ee):
                        str(eachFreq).zfill(2) + str(indexGoods).zfill(2) + str(indexLastBar).zfill(2)
             orderRef = (tradeTime + timedelta(hours = 5)).strftime('%Y%m%d')[3:] + \
                        str(eachFreq).zfill(2) + str(indexGoods).zfill(2) + str(indexBar).zfill(2)
+            print(preOrderRef)
+            print(orderRef)
             if tradeTime.time() in dictGoodsPark[goodsCode]:  # 如果撤单的时间刚好为收盘时间，改为预下单操作
                 theOrder = EVENT_ORDERPARK
                 theCancel = EVENT_ORDERPARKCANCEL
             else:
                 theOrder = EVENT_ORDER
                 theCancel = EVENT_ORDERCANCEL
-            putLogBarDealEvent(ee, "对{} 上一个bar编码为 {} 进行撤单操作".
-                               format(goodsCode, preOrderRef + '1'), eachFreq)
-            putLogBarDealEvent(ee, "对{} 上一个bar编码为 {} 进行撤单操作".
-                               format(goodsCode, preOrderRef + '0'), eachFreq)
+            putLogBarDealEvent(ee, "对本地编码为 {} 进行撤单操作".
+                               format(preOrderRef + '1'), eachFreq)
+            putLogBarDealEvent(ee, "对本地编码为 {} 进行撤单操作".
+                               format(preOrderRef + '0'), eachFreq)
             # 撤开仓单操作
             cancelEvent = Event(type_=theCancel)
             cancelEvent.dict_['orderref'] = preOrderRef + '1'
@@ -47,121 +47,11 @@ def dealBar(strBar, ee):
             cancelEvent.dict_['orderref'] = preOrderRef + '0'
             ee.put(cancelEvent)
 
-            #region 对新的bar数据进行 均值表 重叠度表 周交易明细表计算
-            df = pd.read_sql("select * from {} where trade_time <= '{}' order by trade_time desc limit {}".
-                             format(dict['goods_name'] + '_调整表', tradeTime, eachFreq), dictCon[1]).set_index('trade_time').sort_index()
-            dictFreq = {}
-            dictFreq['trade_time'] = tradeTime
-            dictFreq['goods_code'] = dict['goods_code']
-            dictFreq['goods_name'] = dict['goods_name']
-            dictFreq['open'] = df['open'].iat[0]
-            dictFreq['high'] = df['high'].max()
-            dictFreq['low'] = df['low'].min()
-            dictFreq['close'] = df['close'].iat[-1]
-            dictFreq['volume'] = df['volume'].sum()
-            dictFreq['amt'] = df['amt'].sum()
-            dictFreq['oi'] = df['oi'].iat[-1]
-            dictFreq = insertDbChg(dictFreq)
-            putLogBarDealEvent(ee, "频段 {} 中时间为 {} 进行频段数据合成处理".
-                               format(eachFreq, tradeTime.strftime("%Y-%m-%d %H:%M:%S")), eachFreq)
-            putLogBarDealEvent(ee, str(dictFreq), eachFreq)
-            dictCon[eachFreq].execute(dictTable[dict['goods_name']].insert(), dictFreq)
-            dictCon[eachFreq].execute(dictTable[dict['goods_name'] + '_调整表'].insert(), dictFreq)
-            # 生成均值，重叠度，周交易明细表
-            putLogBarDealEvent(ee, "频段 {} 中时间为 {} 进行均值数据处理".
-                               format(eachFreq, tradeTime.strftime("%Y-%m-%d %H:%M:%S")), eachFreq)
-            getOneMa(eachFreq, goodsCode, tradeTime)
-            putLogBarDealEvent(ee, "频段 {} 中时间为 {} 进行重叠度数据处理".
-                               format(eachFreq, tradeTime.strftime("%Y-%m-%d %H:%M:%S")), eachFreq)
-            getOverLapDegree(eachFreq, goodsCode, tradeTime)
-            putLogBarDealEvent(ee, "频段 {} 中时间为 {} 进行周交易状态数据处理".
-                               format(eachFreq, tradeTime.strftime("%Y-%m-%d %H:%M:%S")), eachFreq)
-            getOneWeekTradeTab(eachFreq, goodsCode, tradeTime)
-            #endregion
-
             # 对bar数据进行处理
             getOrder(eachFreq, goodsCode,goodsInstrument, tradeTime, ee, orderRef)
 
-# 获取单个均值并插入
-def getOneMa(freq, goodsCode, CurrentTradeTime):
-    goodsName = dictGoodsName[goodsCode]
-    sql = "select * from {} where trade_time <= '{}' order by trade_time desc limit {}".\
-        format(goodsName + '_调整表', CurrentTradeTime, mvlenvector[-1])
-    dfFreqAll = pd.read_sql(sql, dictCon[freq]).set_index('trade_time')
-    dfFreqAll = dfFreqAll.sort_index()
-    dict = {}
-    dict['goods_code'] = dfFreqAll['goods_code'][-1]
-    dict['goods_name'] = dfFreqAll['goods_name'][-1]
-    dict['trade_time'] = CurrentTradeTime
-    dict['open'] = dfFreqAll['open'][-1]
-    dict['high'] = dfFreqAll['high'][-1]
-    dict['low'] = dfFreqAll['low'][-1]
-    dict['close'] = dfFreqAll['close'][-1]
-    dfAdjustAll = dictGoodsAdj[goodsCode].copy()
-    dfAdj = dfAdjustAll[
-        (dfAdjustAll['adjdate'] > dfFreqAll.index[0]) & (dfAdjustAll['adjdate'] < dfFreqAll.index[-1])]
-    for eachNum in range(dfAdj.shape[0]):
-        loc = dfFreqAll[dfFreqAll.index < dfAdj['adjdate'][eachNum]].shape[0]  # 调整时刻位置
-        dfFreqAll['close'][:loc] = dfFreqAll['close'][:loc] + \
-                                       dfAdj['adjinterval'][eachNum]
-    dfFreqAll['amt'] = dfFreqAll['close'] * dfFreqAll['volume']
-    for eachMvl in mvlenvector:
-        dfFreq = dfFreqAll[(-1) * eachMvl:]
-        dict['maprice_{}'.format(eachMvl)] = dfFreq['amt'].sum() / dfFreq['volume'].sum()
-        dict['stdprice_{}'.format(eachMvl)] = dfFreq['close'].std()
-        dict['stdmux_{}'.format(eachMvl)] = (dfFreq['close'][-1] - dict['maprice_{}'.format(eachMvl)]) / dict['stdprice_{}'.format(eachMvl)]
-        dict['highstdmux_{}'.format(eachMvl)] = (dfFreq['high'][-1] - dict['maprice_{}'.format(eachMvl)]) / dict['stdprice_{}'.format(eachMvl)]
-        dict['lowstdmux_{}'.format(eachMvl)] = (dfFreq['low'][-1] - dict['maprice_{}'.format(eachMvl)]) / dict['stdprice_{}'.format(eachMvl)]
-    dictCon[eachFreq].execute(dictTable[dict['goods_name'] + '_均值表'].insert(), insertDbChg(dict))
-
-# 获取单个重叠度并插入
-def getOverLapDegree(freq, goodsCode, CurrentTradeTime):
-    goodsName = dictGoodsName[goodsCode]
-    sql = "select * from {} where trade_time <= '{}' order by trade_time desc limit {}".format(goodsName + '_均值表',
-                                                                                               CurrentTradeTime,
-                                                                                               mvlenvector[-1])
-    dfMaALL = pd.read_sql(sql, dictCon[freq]).set_index('trade_time')
-    dfMaALL = dfMaALL.sort_index()
-    dict = {}
-    dict['goods_code'] = dfMaALL['goods_code'][-1]
-    dict['goods_name'] = dfMaALL['goods_name'][-1]
-    dict['trade_time'] = CurrentTradeTime
-    dict['high'] = dfMaALL['high'][-1]
-    dict['low'] = dfMaALL['low'][-1]
-    dict['close'] = dfMaALL['close'][-1]
-    dfAdjustAll = dictGoodsAdj[goodsCode].copy()
-    dfAdj = dfAdjustAll[
-        (dfAdjustAll['adjdate'] > dfMaALL.index[0]) & (dfAdjustAll['adjdate'] < dfMaALL.index[-1])]
-    for eachNum in range(dfAdj.shape[0]):
-        loc = dfMaALL[dfMaALL.index < dfAdj['adjdate'][eachNum]].shape[0]
-        dfMaALL['close'][:loc] = dfMaALL['close'][:loc] + dfAdj['adjinterval'][eachNum]
-        dfMaALL['high'][:loc] = dfMaALL['high'][:loc] + dfAdj['adjinterval'][eachNum]
-        dfMaALL['low'][:loc] = dfMaALL['low'][:loc] + dfAdj['adjinterval'][eachNum]
-    for eachMvl in mvlenvector:
-        dfMa = dfMaALL[(-1) * eachMvl:]
-        num = eachMvl // 10
-        HighPriceSortedTab = dfMa['high'].sort_values(ascending = False, kind = 'mergesort')[:num]
-        HighStdSortedTab = dfMa['highstdmux_{}'.format(eachMvl)].sort_values(ascending = False, kind = 'mergesort')[:num]
-        if (HighStdSortedTab < 0).all():
-            dict['重叠度高_{}'.format(eachMvl)] = -100
-        else:
-            dict['重叠度高_{}'.format(eachMvl)] = len(HighPriceSortedTab.index.intersection(HighStdSortedTab.index)) / num
-        LowPriceSortedTab = (dfMa['low'] * (-1)).sort_values(ascending=False, kind = 'mergesort')[:num]
-        LowStdSortedTab = (dfMa['lowstdmux_{}'.format(eachMvl)] * (-1)).sort_values(ascending=False, kind = 'mergesort')[:num]
-        if (LowStdSortedTab * (-1) > 0).all():
-            dict['重叠度低_{}'.format(eachMvl)] = -100
-        else:
-            dict['重叠度低_{}'.format(eachMvl)] = len(LowPriceSortedTab.index.intersection(LowStdSortedTab.index)) / num
-        ClosePriceSortedTab = dfMa['close'].sort_values(ascending = False, kind = 'mergesort')[:num]
-        CloseStdSortedTab = dfMa['stdmux_{}'.format(eachMvl)].sort_values(ascending = False, kind = 'mergesort')[:num]
-        if (dfMa['stdmux_{}'.format(eachMvl)].sort_index(ascending=False)[:num] < 0).all():
-            dict['重叠度收_{}'.format(eachMvl)] = -100
-        else:
-            dict['重叠度收_{}'.format(eachMvl)] = len(ClosePriceSortedTab.index.intersection(CloseStdSortedTab.index)) / num
-    dictCon[eachFreq].execute(dictTable[dict['goods_name'] + '_重叠度表'].insert(), insertDbChg(dict))
-
 def getOrder(freq, goodsCode,goodsInstrument, CurrentTradeTime, ee, orderRef):
-    if CurrentTradeTime.time() in dictGoodsPark[goodsCode]:
+    if CurrentTradeTime.time() in dictGoodsPark[goodsCode]:  # 是否需要预下单
         theOrder = EVENT_ORDERPARKCOMMAND
         theCancel = EVENT_ORDERPARKCANCEL
     else:
@@ -181,7 +71,6 @@ def getOrder(freq, goodsCode,goodsInstrument, CurrentTradeTime, ee, orderRef):
     NightTradeEnable = ParTab[freq]["夜盘交易标识"][goodsName]
     ODMvLen = ParTab[freq]["重叠度滑动长度"][goodsName]
     seriesTime = pd.Series(dictGoodsClose[freq][theCode])
-
     # 下午最后交易时间
     LastTimeNon = seriesTime.iat[-1]
     # 下午倒数第二交易时间
@@ -194,14 +83,12 @@ def getOrder(freq, goodsCode,goodsInstrument, CurrentTradeTime, ee, orderRef):
     # 倒数第二交易时间
     PreLastTimeNight = PreLastTimeNon if tempSeriesTime.shape[0] == 0 else tempSeriesTime.iat[-2]
     # 根据最新周交易状态，进行下单
-    sql = "select * from {}_周交易明细表 where 交易时间 <= '{} order by 交易时间 desc limit 1".format(goodsName, CurrentTradeTime)
+    sql = "select * from {}_周交易明细表 where 交易时间 <= '{}' order by 交易时间 desc limit 1".format(goodsName, CurrentTradeTime)
     LastTradeDataTab = pd.read_sql(sql, con)
-
     # 是否引入重叠度长度对应的均值标识
     if MaWithODLenFlag:
-        sql = "select maprice_{} as maprice from {}_均值表 " \
-              "where trade_time <= '{}' order by trade_time desc limit 1".format(ODMvLen, goodsName, CurrentTradeTime)
-        MaWithODLen = pd.read_sql(sql, con)["maprice"][0]  # MaWithODLen 对应长度的值
+        sql = "select maprice_{} as maprice from {}_均值表 where trade_time <= '{}' order by trade_time desc limit 1".format(ODMvLen, goodsName, CurrentTradeTime)
+        MaWithODLen = pd.read_sql(sql, con)["maprice"][0]
     LongParStr = LastTradeDataTab['做多参数'][0]
     ShortParStr = LastTradeDataTab['做空参数'][0]
     LongParList = LongParStr.split(',')
@@ -223,11 +110,6 @@ def getOrder(freq, goodsCode,goodsInstrument, CurrentTradeTime, ee, orderRef):
             pos1 = seriesGoods["数量"]
         else:
             pos2 = seriesGoods["数量"]
-    putLogBarDealEvent(ee, "{} 做多持仓手数：{}".
-                       format(goodsCode, pos1), eachFreq)
-    putLogBarDealEvent(ee, "{} 做空持仓手数：{}".
-                       format(goodsCode, pos2), eachFreq)
-
     HighPrice = LastTradeDataTab["最高价"][0]
     LowPrice = LastTradeDataTab["最低价"][0]
     OpenLongPrice = LastTradeDataTab['开仓线多'][0]
@@ -242,8 +124,12 @@ def getOrder(freq, goodsCode,goodsInstrument, CurrentTradeTime, ee, orderRef):
     AccoutRate = GoodsTab[accountName + "系数"][goodsName]
     DuoBuyCount = (AccoutRate * accountCapital * CangWei * RiskRate) / (OpenLongPrice * ChengShu)
     Duovolume = round(DuoBuyCount * DuoCountMux)
-    putLogBarDealEvent(ee, "{} 多手数Duovolume：{}".format(goodsCode, Duovolume), eachFreq)
-
+    print('AccoutRate')
+    print(AccoutRate)
+    print("DuoBuyCount")
+    print(DuoBuyCount)
+    print('DuoCountMux')
+    print(DuoCountMux)
     # 进行四舍五入的价格调整
     OpenLongPrice = changePriceLine(OpenLongPrice, MinChangUnit, "多", "开仓")
     LongStopProfit = changePriceLine(LongStopProfit, MinChangUnit, "多", "止盈")
@@ -260,7 +146,6 @@ def getOrder(freq, goodsCode,goodsInstrument, CurrentTradeTime, ee, orderRef):
     CangWei = CapitalMaxLossRate / ((ShortStopLoss - OpenShortPrice) / OpenShortPrice)
     KongBuyCount = (AccoutRate * accountCapital * CangWei * RiskRate) / (OpenShortPrice * ChengShu)
     Kongvolume = round(KongBuyCount * KongCountMux)
-    putLogBarDealEvent(ee, "{} 空手数Kongvolume：{}".format(goodsCode, Kongvolume), eachFreq)
     OpenShortPrice = changePriceLine(OpenShortPrice, MinChangUnit, "空", "开仓")
     ShortStopProfit = changePriceLine(ShortStopProfit, MinChangUnit, "空", "止盈")
     ShortStopLoss = changePriceLine(ShortStopLoss, MinChangUnit, "空", "止损")
@@ -371,7 +256,7 @@ def getOrder(freq, goodsCode,goodsInstrument, CurrentTradeTime, ee, orderRef):
         if TradeDuoOkStatus == 3 and TradeKongOkStatus == 3:
             putLogBarDealEvent(ee, "{} OD均不满足重叠度条件，不下单".format(goodsCode), freq)
         else:
-            # 强平操作 需要改动的
+            # 强平操作
             if TradeDuoOkStatus == 2 or TradeDuoOkStatus == 4:
                 if pos1 > 0:
                     putLogBarDealEvent(ee, "{} 最后交易时间 TradeTime={}".format(goodsCode, TradeTime), freq)
@@ -520,6 +405,7 @@ def getOrder(freq, goodsCode,goodsInstrument, CurrentTradeTime, ee, orderRef):
                         putLogBarDealEvent(ee, "{} 日盘不开仓，仅平仓；夜盘可开平，现在有日盘，不进行开仓".format(goodsCode), freq)
                 elif DayTradeEnable == 1 and NightTradeEnable == 1:
                     putLogBarDealEvent(ee, "{} 日盘夜盘均可开平".format(goodsCode), freq)
+                    print(sendTradeDr)
                     pass
                 elif DayTradeEnable != 1 and NightTradeEnable != 1:
                     putLogBarDealEvent(ee, "{} 日夜盘均不下单".format(goodsCode), freq)
@@ -534,7 +420,7 @@ if __name__ == '__main__':
     ee.register(EVENT_LOG, thePrint)
     ee.register(EVENT_LOGBARDEAL, thePrint)
     ee.start(timer=False)
-    theBar = "{'goods_code': 'a1901.DCE', 'goods_name': '豆一', 'trade_time': datetime.datetime(2018, 9, 26, 14, 50), 'close': 3746.0, 'volume': 334, 'amt': 12510760.0, 'high': 3746.0, 'low': 3745.0, 'open': 3746.0, 'oi': 244458.0}"
+    theBar = "{'goods_code': 'bu1901.SHF', 'goods_name': '沥青', 'trade_time': datetime.datetime(2018, 9, 25, 9, 6), 'close': 3714.0, 'volume': 54972, 'amt': 2043954000.00, 'high': 3730, 'low': 3708, 'open': 3720, 'oi': 452054.0000}"
     getDictGoodsChg()
     dealBar(theBar, ee)
 

@@ -5,7 +5,7 @@ RD参数文件\\公共参数.xlsx 需要每周进行更改
 pickle\\dictGoodsClose.pkl 需要更改
 """
 # 执行频段数据
-listFreq = [5]
+listFreq = [5, 7, 9]
 # 公共参数表
 dfCapital = pd.read_excel('RD参数文件\\公共参数.xlsx', sheetname='账户资金表')
 GoodsTab = pd.read_excel('RD参数文件\\公共参数.xlsx', sheetname='品种信息', index_col='品种名称')
@@ -92,11 +92,13 @@ dictCon = {}  # 每个频段都会有一个con
 listFreqPlus = listFreq.copy()
 listFreqPlus.insert(0, 1)
 for eachFreq in listFreqPlus:
+    print(eachFreq)
     con = create_engine('mysql+pymysql://root:rd008@localhost:3306/?charset=utf8').connect()
     con.execute('create database if not exists cta{}_trade'.format(eachFreq))
     con.close()
     con = create_engine('mysql+pymysql://root:rd008@localhost:3306/cta{}_trade?charset=utf8'.format(eachFreq)).connect()
     dictCon[eachFreq] = con
+    print('aaa')
     metadata = MetaData(con)
     for eachGoodsName in dictGoodsName.values():
         dictTable[eachGoodsName] = Table(eachGoodsName, metadata,
@@ -232,7 +234,7 @@ port = 8080
 # 是否引入重叠度长度对应的均值标识
 MaWithODLenFlag = False
 # 资金账号名称
-accountName = "起航"
+accountName = "测3"
 # 在开仓bar内进行止盈与止损操作
 StopAbtainInBarMux = 2
 StopLossInBarMux = 2

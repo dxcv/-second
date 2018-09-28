@@ -68,7 +68,7 @@ class RdMdUi(QMainWindow):
         self.TableFreqTrade = {}
         for eachFreq in listFreq:
             tabSub = QTabWidget()
-            # 做多与做空
+            #region 做多与做空
             tabSub1 = QWidget()
             tableDuo = QTableWidget(0, len(listDuoKong), self)
             self.TableFreqDuo[eachFreq] = tableDuo
@@ -88,7 +88,8 @@ class RdMdUi(QMainWindow):
             vbox.addWidget(QLabel('做空', self))
             vbox.addWidget(tableKong)
             tabSub1.setLayout(vbox)
-            # 频段的持仓
+            #endregion
+            #region 频段的持仓
             tabSub2 = QWidget()
             tablePosition = QTableWidget(0, len(listFreqPosition), self)
             tablePosition.setHorizontalHeaderLabels(listFreqPosition)
@@ -101,7 +102,8 @@ class RdMdUi(QMainWindow):
             hbox = QHBoxLayout()
             hbox.addWidget(tablePosition)
             tabSub2.setLayout(hbox)
-            # 频段的成交
+            #endregion
+            #region 频段的成交
             tabSub3 = QWidget()
             tableTrade = QTableWidget(0, len(listTrade), self)
             tableTrade.setHorizontalHeaderLabels(listTrade)
@@ -114,7 +116,8 @@ class RdMdUi(QMainWindow):
             hbox = QHBoxLayout()
             hbox.addWidget(tableTrade)
             tabSub3.setLayout(hbox)
-            # 频段的委托
+            #endregion
+            #region 频段的委托
             tabSub4 = QWidget()
             tableOrder = QTableWidget(0, len(listOrder), self)
             tableOrder.setHorizontalHeaderLabels(listOrder)
@@ -127,6 +130,7 @@ class RdMdUi(QMainWindow):
             hbox = QHBoxLayout()
             hbox.addWidget(tableOrder)
             tabSub4.setLayout(hbox)
+            #endregion
             tabSub.addTab(tabSub1, '做多与做空')
             tabSub.addTab(tabSub2, '频段持仓')
             tabSub.addTab(tabSub3, '频段成交')
@@ -152,7 +156,7 @@ class RdMdUi(QMainWindow):
         tab2.currentChanged.connect(self.switchTab2)
         hbox.addWidget(tab2)
         gbox2.setLayout(hbox)
-        # 菜单栏
+        #region 菜单栏
         menu_root = self.menuBar()
         menu_root.setFont(self.font)
         orderhandle = menu_root.addMenu('手动下单操作')
@@ -195,6 +199,7 @@ class RdMdUi(QMainWindow):
         deleteDb.addAction(self.dltItem)
         deleteDb.addAction(self.dltItem1)
         deleteDb.addAction(self.dltItem2)
+        #endregion
         # 总布局
         widget = QWidget()
         widget.setLayout(vbox0)
@@ -228,7 +233,7 @@ class RdMdUi(QMainWindow):
         hbox.addWidget(self.tableAccount)
         return hbox
 
-    def switchTab2(self):
+    def switchTab2(self):  # 点击 tab 时触发事件
         tab2 = self.sender()
         index = tab2.currentIndex()
         if index == 1:  # 说明当时在查询持仓了：
@@ -275,7 +280,7 @@ class RdMdUi(QMainWindow):
         if not self.md.islogin:
             putLogEvent(self.ee, "行情服务器登陆失败")
         else:
-            putLogEvent(self.ee, "订阅主力合约")
+            putLogEvent(self.ee, "订阅主力合约" + str(list(dictGoodsZhuli.values())))
             for each in dictGoodsZhuli.values():
                 self.md.q.SubscribeMarketData(each.split('.')[0])
 
@@ -314,17 +319,17 @@ class RdMdUi(QMainWindow):
         else:
             temp = pd.Series(tradeDay)
             startTime = temp[temp < now].iat[-1] + timedelta(hours=16)
-        putLogEvent(self.ee, "删除自{}到最新的数据".format(startTime))
+        putLogEvent(self.ee, "删除自 {} 到最新的数据".format(startTime))
         dltData(startTime)
-        putLogEvent(self.ee, "删除自{}到最新的数据完成".format(startTime))
+        putLogEvent(self.ee, "删除自 {} 到最新的数据完成".format(startTime))
 
     def defDlt1(self):  # 删除本交易日以来的数据，不包含夜盘
         now = datetime.now()
         now = datetime(now.year, now.month, now.day)
         startTime = now + timedelta(hours=8)
-        putLogEvent(self.ee, "删除自{}到最新的数据".format(startTime))
+        putLogEvent(self.ee, "删除自 {} 到最新的数据".format(startTime))
         dltData(startTime)
-        putLogEvent(self.ee, "删除自{}到最新的数据完成".format(startTime))
+        putLogEvent(self.ee, "删除自 {} 到最新的数据完成".format(startTime))
 
     # 弹出框界面
     def orderShow(self): #显示下单命令
@@ -592,7 +597,14 @@ class RdMdUi(QMainWindow):
                     self.td.cancelOrderPark(dict)
 
     def dealTickData(self, event):
-        pass
+        data = {}
+        theTradeTime = pd.Timestamp(event.dict_['data']["TradingDay"] + ' '
+                                          + event.dict_['data']["UpdateTime"] + '.'
+                                          + str(event.dict_['data']["UpdateMillisec"]))
+        data['close'] = event.dict_['data']["LastPrice"]
+        data['volume'] = event.dict_['data']["Volume"]
+        data['amt'] = event.dict_['data']["Turnover"]
+        putLogTickEvent(self.ee, str(data))
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
